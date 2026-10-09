@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import math
+import os
 
 app = Flask(__name__)
 
@@ -61,9 +62,7 @@ def distance(lat1, lon1, lat2, lon2):
 
     a = (
         math.sin(dp / 2) ** 2
-        + math.cos(p1)
-        * math.cos(p2)
-        * math.sin(dl / 2) ** 2
+        + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
     )
 
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
@@ -72,12 +71,9 @@ def distance(lat1, lon1, lat2, lon2):
 
 
 def match_score(donor, recipient_group, hospital_lat, hospital_lon):
-
     score = 0
 
-    if donor["blood_group"] in COMPATIBILITY.get(
-        recipient_group, []
-    ):
+    if donor["blood_group"] in COMPATIBILITY.get(recipient_group, []):
         score += 50
 
     if donor["available"]:
@@ -104,11 +100,6 @@ def match_score(donor, recipient_group, hospital_lat, hospital_lon):
 
 @app.route("/")
 def home():
-    return render_template("test.html")
-
-
-@app.route("/test")
-def test_page():
     return render_template("test.html")
 
 
@@ -139,13 +130,10 @@ def match_donors():
             results.append({
                 "name": donor["name"],
                 "blood_group": donor["blood_group"],
-                "distance": round(dist, 2),
+                "distance_km": round(dist, 2),
                 "match_score": score,
-                "status": (
-                    "Available"
-                    if donor["available"]
-                    else "Not Available"
-                )
+                "status": "Available" if donor["available"]
+                           else "Not Available"
             })
 
     results.sort(
